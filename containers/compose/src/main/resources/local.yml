@@ -1,0 +1,14 @@
+#
+# Spring Petclinic, Docker Compose configuration file
+#
+# Required variables: TODO
+# Optional variables: TODO
+#
+# Usage:
+#  docker-compose -f local.yml up [ -d ]
+#
+
+version: '2'
+
+services:
+    # TODO

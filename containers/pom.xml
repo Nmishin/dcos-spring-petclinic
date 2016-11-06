@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+	    <groupId>org.springframework.samples</groupId>
+	    <artifactId>springboot-petclinic</artifactId>
+	    <version>1.4.1.sb-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>containers</artifactId>
+    <packaging>pom</packaging>
+    <name>Petclinic Containers :: Parent POM</name>
+
+    <properties>
+        <dockerCli>docker</dockerCli>
+
+        <!-- Overridden during deploy step.
+             If you change repository name do not forget update it in profile properties.  -->
+
+        <!-- Docker repository for this project -->
+        <dockerRepository>petclinic</dockerRepository>
+
+        <!-- Required Docker images -->
+        <javaImage>openjdk:alpine</javaImage>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <modules>
+        <module>compose</module>
+        <module>petclinic-api-server</module>
+    </modules>
+
+    <build>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <pluginManagement>
+            <plugins>
+
+                <!-- Copy resource files to Docker build directory with property rewriting.
+                     To enable bind <id>docker-resources</id> to <phase>process-resources</phase>. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>docker-resources</id>
+                            <phase>none</phase>
+                            <goals>
+                                <goal>resources</goal>
+                            </goals>
+                            <configuration>
+                                <outputDirectory>${project.build.directory}/context</outputDirectory>
+                                <!-- Override Spring setting, restore Maven defaults -->
+                                <delimiters>
+                                    <delimiter>${*}</delimiter>
+                                </delimiters>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Copy module dependencies to Docker build directory.
+                     To enable bind <id>docker-dependencies</id> to <phase>process-sources</phase>. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>docker-dependencies</id>
+                            <phase>none</phase>
+                            <goals>
+                                <goal>copy-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <excludeTransitive>true</excludeTransitive>
+                                <stripVersion>true</stripVersion>
+                                <outputDirectory>${project.build.directory}/context</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+                <!-- Build Docker image.
+                     To enable bind <id>docker-build</id> to <phase>install</phase>. -->
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>docker-build</id>
+                            <phase>none</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <skip>true</skip>
+                                <executable>${dockerCli}</executable>
+                                <arguments>
+                                    <argument>build</argument>
+                                    <argument>--force-rm</argument>
+                                    <!-- Tag the image with the project coordinates -->
+                                    <argument>--label=project.groupid=${project.groupId}</argument>
+                                    <argument>--label=project.artifactid=${project.artifactId}</argument>
+                                    <argument>--label=project.version=${project.version}</argument>
+                                    <argument>--tag=${dockerRepository}/${project.artifactId}:${project.version}</argument>
+                                    <argument>${project.build.directory}/context</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>docker-push</id>
+                            <phase>none</phase>
+                            <goals>
+                                <goal>exec</goal>
+                            </goals>
+                            <configuration>
+                                <skip>true</skip>
+                                <executable>${dockerCli}</executable>
+                                <arguments>
+                                    <argument>push</argument>
+                                    <argument>${dockerRepository}/${project.artifactId}:${project.version}</argument>
+                                </arguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+
+            <!-- Make source package for 2-stage build
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <inherited>false</inherited>
+                <configuration>
+                    <descriptor>src/assembly/src.xml</descriptor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>create-archive</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- The profile to build and deploy Docker images without deploying regular Maven artifacts.
+             Do not forget to set targetDockerRegistry property in cmdline for pushing images to remote registry. -->
+        <profile>
+            <id>image</id>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+
+                        <plugin>
+                            <groupId>org.codehaus.mojo</groupId>
+                            <artifactId>exec-maven-plugin</artifactId>
+                            <executions>
+                                <execution>
+                                    <id>docker-build</id>
+                                    <configuration>
+                                        <skip>false</skip>
+                                    </configuration>
+                                </execution>
+                                <execution>
+                                    <id>docker-push</id>
+                                    <configuration>
+                                        <skip>false</skip>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-deploy-plugin</artifactId>
+                            <configuration>
+                                <skip>true</skip>
+                            </configuration>
+                        </plugin>
+
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>hasDockerRegistry</id>
+
+            <activation>
+                <property>
+                    <name>dockerRegistry</name>
+                </property>
+            </activation>
+
+            <properties>
+                <!-- *DockerRepository properties go here if any. Like
+                <javaDockerRepository>${dockerRegistry}/petclinic</javaDockerRepository>
+                -->
+            </properties>
+
+        </profile>
+
+        <profile>
+            <id>hasTargetDockerRegistry</id>
+
+            <activation>
+                <property>
+                    <name>targetDockerRegistry</name>
+                </property>
+            </activation>
+
+            <properties>
+                <dockerRepository>${targetDockerRegistry}/petclinic</dockerRepository>
+            </properties>
+
+        </profile>
+    </profiles>
+
+</project>
