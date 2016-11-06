@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.samples</groupId>
         <artifactId>springboot-petclinic</artifactId>
-        <version>1.4.1</version>
+        <version>1.4.1.sb-SNAPSHOT</version>
     </parent>
     <artifactId>springboot-petclinic-server</artifactId>
     <name>Spring Petclinic :: Spring MVC REST server</name>

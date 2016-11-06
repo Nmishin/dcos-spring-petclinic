@@ -10,7 +10,7 @@
 
 	<groupId>org.springframework.samples</groupId>
 	<artifactId>springboot-petclinic</artifactId>
-	<version>1.4.1</version>
+	<version>1.4.1.sb-SNAPSHOT</version>
 	<name>Spring Petclinic :: Parent POM</name>
 	<packaging>pom</packaging>
 
