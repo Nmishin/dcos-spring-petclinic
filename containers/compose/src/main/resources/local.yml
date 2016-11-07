@@ -1,17 +1,40 @@
 #
 # Spring Petclinic, Docker Compose configuration file
 #
-# Required variables: none
+# Required variables:
+#  - dbUser     - DB user name, set at DB creation time.
+#  - dbPassword - DB password, set at DB creation time.
 # Optional variables: none
 #
 # Usage:
+#  dbUser=<ANY_VALUE> \
+#  dbPassword=<ANY_VALUE> \
 #  docker-compose -f local.yml up [ -d ]
 #
 
 version: '2'
 
 services:
+
     petclinicserver:
         image: ${dockerRepository}/petclinic-api-server:${project.version}
+        environment:
+            dbHost: "db"
+            dbType: "mysql"
+            dbName: "petclinic"
+            dbUser:
+            dbPassword:
         ports:
             - "8080"
+        links:
+            - petclinicdb:db
+
+    petclinicdb:
+        image: mysql:5.7.16
+        environment:
+            MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+            MYSQL_DATABASE: "petclinic"
+            MYSQL_USER: ${dbUser}
+            MYSQL_PASSWORD: ${dbPassword}
+        volumes:
+            - "/var/lib/mysql"

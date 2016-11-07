@@ -40,6 +40,10 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>src/main/files</directory>
+                <filtering>false</filtering>
+            </resource>
         </resources>
 
         <pluginManagement>

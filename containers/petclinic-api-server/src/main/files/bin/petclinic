@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+exec java -cp "/opt/spring/petclinic/lib/*" \
+    org.springframework.boot.loader.JarLauncher \
+    --petclinic.database="$dbType" \
+    --spring.datasource.url="jdbc:$dbType://$dbHost/$dbName" \
+    --spring.datasource.username="$dbUser" \
+    --spring.datasource.password="$dbPassword" \
+    "$@"

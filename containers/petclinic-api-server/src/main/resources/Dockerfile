@@ -4,6 +4,9 @@
 
 FROM ${javaImage}
 
-COPY springboot-petclinic-server.jar /opt/spring/petclinic/lib/
+COPY . /opt/spring/petclinic/
+RUN chmod 755 /opt/spring/petclinic/bin/*
 
-CMD ["java", "-jar", "/opt/spring/petclinic/lib/springboot-petclinic-server.jar"]
+CMD ["/opt/spring/petclinic/bin/petclinic", \
+    "--server.port=8080"]
+EXPOSE 8080
