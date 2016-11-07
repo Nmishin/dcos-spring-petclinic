@@ -1,8 +1,8 @@
 #
 # Spring Petclinic, Docker Compose configuration file
 #
-# Required variables: TODO
-# Optional variables: TODO
+# Required variables: none
+# Optional variables: none
 #
 # Usage:
 #  docker-compose -f local.yml up [ -d ]
@@ -11,4 +11,7 @@
 version: '2'
 
 services:
-    # TODO
+    petclinicserver:
+        image: ${dockerRepository}/petclinic-api-server:${project.version}
+        ports:
+            - "8080"
